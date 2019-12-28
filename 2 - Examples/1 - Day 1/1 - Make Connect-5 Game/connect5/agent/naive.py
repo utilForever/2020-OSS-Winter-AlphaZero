@@ -1,5 +1,6 @@
 import random
 from connect5.agent.base import Agent
+from connect5.board import Move
 from connect5.types import Point
 
 class RandomBot(Agent):
