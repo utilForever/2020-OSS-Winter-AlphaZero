@@ -10,7 +10,7 @@ def main():
     game = connect5_board.GameState.new_game(board_size)
     bot = agent.RandomBot()
 
-    while True:
+    while not game.is_over():
         print(chr(27) + "[2J")
         print_board(game.board)
         if game.next_player == types.Player.black:
@@ -21,6 +21,10 @@ def main():
             move = bot.select_move(game)
         print_move(game.next_player, move)
         game = game.apply_move(move)
+
+    print(chr(27) + "[2J")
+    print_board(game.board)
+    print("Winner is %s!" % game.winner)
 
 if __name__ == '__main__':
     main()
