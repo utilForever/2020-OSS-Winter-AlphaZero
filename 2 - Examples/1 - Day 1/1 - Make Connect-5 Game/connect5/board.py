@@ -9,8 +9,8 @@ class Board:
 
     def place_stone(self, player, point):
         assert self.is_on_grid(point)
-        assert self._grid[point.row][point.col] is None
-        self._grid[point.row][point.col] = player.color
+        assert self._grid[point.row][point.col] is 0
+        self._grid[point.row][point.col] = player
 
     def is_on_grid(self, point):
         return 1 <= point.row <= self.num_rows and \
