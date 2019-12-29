@@ -88,25 +88,29 @@ class GameState:
         d_col = c
         if direction is Direction.right:
             d_col += 1
-            while self.board._grid[d_row][d_col] is stone_color:
+            while self.board.is_on_grid(Point(row=d_row, col=d_col)) and \
+                self.board._grid[d_row][d_col] is stone_color:
                 stones.append(Point(row=d_row, col=d_col))
                 d_col += 1
         elif direction is Direction.down:
             d_row += 1
-            while self.board._grid[d_row][d_col] is stone_color:
+            while self.board.is_on_grid(Point(row=d_row, col=d_col)) and \
+                self.board._grid[d_row][d_col] is stone_color:
                 stones.append(Point(row=d_row, col=d_col))
                 d_row += 1
         elif direction is Direction.right_down:
             d_row += 1
             d_col += 1
-            while self.board._grid[d_row][d_col] is stone_color:
+            while self.board.is_on_grid(Point(row=d_row, col=d_col)) and \
+                self.board._grid[d_row][d_col] is stone_color:
                 stones.append(Point(row=d_row, col=d_col))
                 d_row += 1
                 d_col += 1              
         elif direction is Direction.left_down:
             d_row += 1
             d_col -= 1
-            while self.board._grid[d_row][d_col] is stone_color:
+            while self.board.is_on_grid(Point(row=d_row, col=d_col)) and \
+                self.board._grid[d_row][d_col] is stone_color:
                 stones.append(Point(row=d_row, col=d_col))
                 d_row += 1
                 d_col -= 1
