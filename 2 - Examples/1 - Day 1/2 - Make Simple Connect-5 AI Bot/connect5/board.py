@@ -120,23 +120,27 @@ class GameState:
 
     def is_over(self):
         is_full = True
-        for r in range(1, self.board.num_rows):
-            for c in range(1, self.board.num_cols):
+        for r in range(1, self.board.num_rows + 1):
+            for c in range(1, self.board.num_cols + 1):
                 stone_color = self.board._grid[r][c]
                 if stone_color is not 0:
-                    if stone_color is self.board._grid[r][c + 1]:
+                    if self.board.is_on_grid(Point(row=r, col=c+1)) and \
+                        stone_color is self.board._grid[r][c + 1]:
                         if self.is_connect5(r, c, stone_color, Direction.right):
                             self.winner = "Black" if stone_color is Player.black else "White"
                             return True
-                    if stone_color is self.board._grid[r + 1][c]:
+                    if self.board.is_on_grid(Point(row=r+1, col=c)) and \
+                        stone_color is self.board._grid[r + 1][c]:
                         if self.is_connect5(r, c, stone_color, Direction.down):
                             self.winner = "Black" if stone_color is Player.black else "White"
                             return True
-                    if stone_color is self.board._grid[r + 1][c + 1]:
+                    if self.board.is_on_grid(Point(row=r+1, col=c+1)) and \
+                        stone_color is self.board._grid[r + 1][c + 1]:
                         if self.is_connect5(r, c, stone_color, Direction.right_down):
                             self.winner = "Black" if stone_color is Player.black else "White"
                             return True
-                    if stone_color is self.board._grid[r + 1][c - 1]:
+                    if self.board.is_on_grid(Point(row=r+1, col=c-1)) and \
+                        stone_color is self.board._grid[r + 1][c - 1]:
                         if self.is_connect5(r, c, stone_color, Direction.left_down):
                             self.winner = "Black" if stone_color is Player.black else "White"
                             return True
