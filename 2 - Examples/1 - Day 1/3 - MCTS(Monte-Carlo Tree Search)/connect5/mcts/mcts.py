@@ -3,6 +3,14 @@ import random
 
 from connect5 import agent
 from connect5.types import Player
+from connect5.utils import coords_from_point
+
+def fmt(x):
+    if x is Player.black:
+        return 'B'
+    if x is Player.white:
+        return 'W'
+    return coords_from_point(x.point)
 
 class MCTSNode(object):
     def __init__(self, game_state, parent=None, move=None):
