@@ -52,7 +52,11 @@ class MCTSNode(object):
         return new_node
 
     def record_win(self, winner):
-        self.win_counts[winner] += 1
+        if winner is 0:
+            self.win_counts[Player.black] += 1
+            self.win_counts[Player.white] += 1
+        else:
+            self.win_counts[winner] += 1
         self.num_rollouts += 1
 
     def can_add_child(self):
@@ -91,7 +95,7 @@ class MCTSAgent(agent.Agent):
             (child.winning_frac(game_state.next_player), child.move, child.num_rollouts)
             for child in root.children
         ]
-        scored_moves.sort(key=lambda x: x[0], reserve=True)
+        scored_moves.sort(key=lambda x: x[0], reverse=True)
         for s, m, n in scored_moves[:10]:
             print('%s - %.3f (%d)' % (m, s, n))
 
@@ -125,8 +129,8 @@ class MCTSAgent(agent.Agent):
     @staticmethod
     def simulate_random_game(game):
         bots = {
-            Player.black: agent.FastRandomBot(),
-            Player.white: agent.FastRandomBot(),            
+            Player.black: agent.RandomBot(),
+            Player.white: agent.RandomBot(),            
         }
         while not game.is_over():
             bot_move = bots[game.next_player].select_move(game)
