@@ -17,3 +17,9 @@ class Point(namedtuple('Point', 'row col')):
             Point(self.row, self.col - 1),
             Point(self.row, self.col + 1),
         ]
+
+class Direction(enum.Enum):
+    right = 1
+    down = 2
+    right_down = 3
+    left_down = 4
