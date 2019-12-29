@@ -24,7 +24,11 @@ def main():
 
     print(chr(27) + "[2J")
     print_board(game.board)
-    print("Winner is %s!" % game.winner)
+
+    if game.winner is "Draw":
+        print("Draw!")
+    else:
+        print("Winner is %s!" % game.winner)
 
 if __name__ == '__main__':
     main()

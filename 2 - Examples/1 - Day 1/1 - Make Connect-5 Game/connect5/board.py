@@ -119,6 +119,7 @@ class GameState:
         return False      
 
     def is_over(self):
+        is_full = True
         for r in range(1, self.board.num_rows):
             for c in range(1, self.board.num_cols):
                 stone_color = self.board._grid[r][c]
@@ -139,4 +140,10 @@ class GameState:
                         if self.is_connect5(r, c, stone_color, Direction.left_down):
                             self.winner = "Black" if stone_color is Player.black else "White"
                             return True
-        return False
+                else:
+                    is_full = False            
+        if is_full:
+            self.winner = "Draw"
+            return True
+        else:
+            return False
