@@ -60,3 +60,6 @@ class GameState:
             board_size = (board_size, board_size)
         board = Board(*board_size)
         return GameState(board, Player.black, None, None)
+
+    def is_valid_move(self, move):
+        return self.board.get(move.point) is 0
