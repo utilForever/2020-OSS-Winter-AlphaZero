@@ -1,11 +1,13 @@
 import copy
 from connect5.types import Player
+from connect5 import zobrist
 
 class Board:
     def __init__(self, num_rows, num_cols):
         self.num_rows = num_rows
         self.num_cols = num_cols
         self._grid = [x[:] for x in [[0] * (self.num_cols + 1)] * (self.num_rows + 1)]
+        self._hash = zobrist.EMPTY_BOARD
 
     def place_stone(self, player, point):
         assert self.is_on_grid(point)
@@ -19,6 +21,9 @@ class Board:
     def get(self, point):
         stone_color = self._grid[point.row][point.col]
         return stone_color
+
+    def zobrist_hash(self):
+        return self._hash
 
 class Move:
     def __init__(self, point=None):
