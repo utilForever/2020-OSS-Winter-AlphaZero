@@ -47,7 +47,7 @@ class GameState:
         else:
             self.previous_states = frozenset(previous.previous_states |
             {(previous.next_player, previous.board.zobrist_hash())})
-        self.last_move = move
+        self.winner = None
 
     def apply_move(self, move):
         next_board = copy.deepcopy(self.board)
@@ -121,14 +121,18 @@ class GameState:
                 if stone_color is not 0:
                     if stone_color is self.board._grid[r][c + 1]:
                         if self.is_connect5(r, c, stone_color, Direction.right):
+                            self.winner = "Black" if stone_color is Player.black else "White"
                             return True
                     if stone_color is self.board._grid[r + 1][c]:
                         if self.is_connect5(r, c, stone_color, Direction.down):
+                            self.winner = "Black" if stone_color is Player.black else "White"
                             return True
                     if stone_color is self.board._grid[r + 1][c + 1]:
                         if self.is_connect5(r, c, stone_color, Direction.right_down):
+                            self.winner = "Black" if stone_color is Player.black else "White"
                             return True
                     if stone_color is self.board._grid[r + 1][c - 1]:
                         if self.is_connect5(r, c, stone_color, Direction.left_down):
+                            self.winner = "Black" if stone_color is Player.black else "White"
                             return True
         return False
