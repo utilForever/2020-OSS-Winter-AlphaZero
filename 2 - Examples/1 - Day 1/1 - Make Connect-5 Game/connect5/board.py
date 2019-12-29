@@ -1,5 +1,5 @@
 import copy
-from connect5.types import Player
+from connect5.types import Player, Point, Direction
 from connect5 import zobrist
 
 class Board:
@@ -63,3 +63,72 @@ class GameState:
 
     def is_valid_move(self, move):
         return self.board.get(move.point) is 0
+
+    def is_middle(self, r, c, stone_color, direction):
+        if direction is Direction.right and self.board.is_on_grid(Point(row=r, col=c-1)):
+            if self.board._grid[r][c - 1] is stone_color:
+                return False
+        if direction is Direction.down and self.board.is_on_grid(Point(row=r-1, col=c)):
+            if self.board._grid[r - 1][c] is stone_color:
+                return False
+        if direction is Direction.right_down and self.board.is_on_grid(Point(row=r-1, col=c-1)):
+            if self.board._grid[r - 1][c - 1] is stone_color:
+                return False
+        if direction is Direction.left_down and self.board.is_on_grid(Point(row=r-1, col=c+1)):
+            if self.board._grid[r - 1][c + 1] is stone_color:
+                return False
+        return True
+
+    def is_connect5(self, r, c, stone_color, direction):
+        if not self.is_middle(r, c, stone_color, direction):
+            return False
+        stones = []
+        stones.append(Point(r, c))
+        d_row = r
+        d_col = c
+        if direction is Direction.right:
+            d_col += 1
+            while self.board._grid[d_row][d_col] is stone_color:
+                stones.append(Point(row=d_row, col=d_col))
+                d_col += 1
+        elif direction is Direction.down:
+            d_row += 1
+            while self.board._grid[d_row][d_col] is stone_color:
+                stones.append(Point(row=d_row, col=d_col))
+                d_row += 1
+        elif direction is Direction.right_down:
+            d_row += 1
+            d_col += 1
+            while self.board._grid[d_row][d_col] is stone_color:
+                stones.append(Point(row=d_row, col=d_col))
+                d_row += 1
+                d_col += 1              
+        elif direction is Direction.left_down:
+            d_row += 1
+            d_col -= 1
+            while self.board._grid[d_row][d_col] is stone_color:
+                stones.append(Point(row=d_row, col=d_col))
+                d_row += 1
+                d_col -= 1
+        if len(stones) is 5:
+            return True
+        return False      
+
+    def is_over(self):
+        for r in range(1, self.board.num_rows):
+            for c in range(1, self.board.num_cols):
+                stone_color = self.board._grid[r][c]
+                if stone_color is not 0:
+                    if stone_color is self.board._grid[r][c + 1]:
+                        if self.is_connect5(r, c, stone_color, Direction.right):
+                            return True
+                    if stone_color is self.board._grid[r + 1][c]:
+                        if self.is_connect5(r, c, stone_color, Direction.down):
+                            return True
+                    if stone_color is self.board._grid[r + 1][c + 1]:
+                        if self.is_connect5(r, c, stone_color, Direction.right_down):
+                            return True
+                    if stone_color is self.board._grid[r + 1][c - 1]:
+                        if self.is_connect5(r, c, stone_color, Direction.left_down):
+                            return True
+        return False
