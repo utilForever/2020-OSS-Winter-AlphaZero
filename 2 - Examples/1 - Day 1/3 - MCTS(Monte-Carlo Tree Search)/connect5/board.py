@@ -151,7 +151,7 @@ class GameState:
             return True
         else:
             return False
-
+    
     def legal_moves(self):
         moves = []
         for row in range(1, self.board.num_rows + 1):
