@@ -73,8 +73,8 @@ class MCTSNode(object):
         return self.W / self.N
 
 class AZAgent(agent.Agent):
-    def __init__(self, state_dict, noise=False, alpha=0.03, eps=0.25, rounds_per_move=1600, puct_init=1.25, puct_base=19652):
-        self.network = Network()
+    def __init__(self, board_size, state_dict, noise=False, alpha=0.03, eps=0.25, rounds_per_move=1600, puct_init=1.25, puct_base=19652):
+        self.network = Network(board_size)
         self.network.load_state_dict(state_dict)
 
         self.noise = noise
