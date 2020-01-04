@@ -12,19 +12,20 @@ from alphazero.mcts import AZAgent
 
 import multiprocessing as mp
 import numpy as np
+import time
 
 from tensorboardX import SummaryWriter
 
 USE_CUDA = torch.cuda.is_available()
 
 TRAINING_CONFIG = {
-    'BOARD_SIZE': 10,
+    'BOARD_SIZE': 15,
 
     'LEARNING_RATE': 1e-1,
     'WEIGHT_DECAY': 1e-4,
 
     'ROUNDS_PER_MOVE': 400,
-    'PUCT_INIT': 1.25,
+    'PUCT_INIT': 0.5,
     'PUCT_BASE': 19652,
 
     'MCTS_NOISE': True,
@@ -46,7 +47,6 @@ target_network = Network(TRAINING_CONFIG['BOARD_SIZE'])
 
 if USE_CUDA:
     target_network = target_network.cuda()
-    MSE = MSE.cuda()
 
 if TRAINING_CONFIG['LOAD_CHECKPOINT'] != 0:
     target_network.load_state_dict(torch.load(f'models/checkpoint-{TRAINING_CONFIG["LOAD_CHECKPOINT"]}.bin'))
@@ -75,7 +75,7 @@ def main():
         momentum=0.9)
 
     for _ in range(TRAINING_CONFIG['SELFPLAY_WORKERS']):
-        p = mp.Process(target_selfplay_worker, args=(queue,))
+        p = mp.Process(target=selfplay_worker, args=(queue,))
         p.start()
 
     while True:
@@ -99,7 +99,7 @@ def main():
             for _ in range(TRAINING_CONFIG['EPOCH']):
                 states, pis, values = buffer.sample(TRAINING_CONFIG['BATCH_SIZE'])
                 if USE_CUDA:
-                    states, pis, value = states.cuda(), pis.cuda(), values.cuda()
+                    states, pis, values = states.cuda(), pis.cuda(), values.cuda()
 
                 opt.zero_grad()
                 out_pi, out_v = target_network(states)

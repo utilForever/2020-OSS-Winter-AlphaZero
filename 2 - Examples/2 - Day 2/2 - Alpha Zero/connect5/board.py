@@ -1,25 +1,26 @@
 import copy
 from connect5.types import Player, Point, Direction
 from connect5 import zobrist
+import numpy as np
 
 class Board:
     def __init__(self, num_rows, num_cols):
         self.num_rows = num_rows
         self.num_cols = num_cols
-        self._grid = [x[:] for x in [[0] * (self.num_cols + 1)] * (self.num_rows + 1)]
+        self._grid = np.zeros((self.num_rows + 1, self.num_cols + 1), dtype=np.int)
         self._hash = zobrist.EMPTY_BOARD
 
     def place_stone(self, player, point):
         assert self.is_on_grid(point)
-        assert self._grid[point.row][point.col] is 0
-        self._grid[point.row][point.col] = player
+        assert self._grid[point.row, point.col] == 0
+        self._grid[point.row, point.col] = player
 
     def is_on_grid(self, point):
         return 1 <= point.row <= self.num_rows and \
             1 <= point.col <= self.num_cols
 
     def get(self, point):
-        stone_color = self._grid[point.row][point.col]
+        stone_color = self._grid[point.row, point.col]
         return stone_color
 
     def zobrist_hash(self):
@@ -62,20 +63,20 @@ class GameState:
         return GameState(board, Player.black, None, None)
 
     def is_valid_move(self, move):
-        return self.board.get(move.point) is 0
+        return self.board.get(move.point) == 0
 
     def is_middle(self, r, c, stone_color, direction):
         if direction is Direction.right and self.board.is_on_grid(Point(row=r, col=c-1)):
-            if self.board._grid[r][c - 1] is stone_color:
+            if self.board._grid[r, c - 1] == stone_color:
                 return False
         if direction is Direction.down and self.board.is_on_grid(Point(row=r-1, col=c)):
-            if self.board._grid[r - 1][c] is stone_color:
+            if self.board._grid[r - 1, c] == stone_color:
                 return False
         if direction is Direction.right_down and self.board.is_on_grid(Point(row=r-1, col=c-1)):
-            if self.board._grid[r - 1][c - 1] is stone_color:
+            if self.board._grid[r - 1, c - 1] == stone_color:
                 return False
         if direction is Direction.left_down and self.board.is_on_grid(Point(row=r-1, col=c+1)):
-            if self.board._grid[r - 1][c + 1] is stone_color:
+            if self.board._grid[r - 1, c + 1] == stone_color:
                 return False
         return True
 
@@ -89,20 +90,20 @@ class GameState:
         if direction is Direction.right:
             d_col += 1
             while self.board.is_on_grid(Point(row=d_row, col=d_col)) and \
-                self.board._grid[d_row][d_col] is stone_color:
+                self.board._grid[d_row, d_col] == stone_color:
                 stones.append(Point(row=d_row, col=d_col))
                 d_col += 1
         elif direction is Direction.down:
             d_row += 1
             while self.board.is_on_grid(Point(row=d_row, col=d_col)) and \
-                self.board._grid[d_row][d_col] is stone_color:
+                self.board._grid[d_row, d_col] == stone_color:
                 stones.append(Point(row=d_row, col=d_col))
                 d_row += 1
         elif direction is Direction.right_down:
             d_row += 1
             d_col += 1
             while self.board.is_on_grid(Point(row=d_row, col=d_col)) and \
-                self.board._grid[d_row][d_col] is stone_color:
+                self.board._grid[d_row, d_col] == stone_color:
                 stones.append(Point(row=d_row, col=d_col))
                 d_row += 1
                 d_col += 1              
@@ -110,7 +111,7 @@ class GameState:
             d_row += 1
             d_col -= 1
             while self.board.is_on_grid(Point(row=d_row, col=d_col)) and \
-                self.board._grid[d_row][d_col] is stone_color:
+                self.board._grid[d_row, d_col] == stone_color:
                 stones.append(Point(row=d_row, col=d_col))
                 d_row += 1
                 d_col -= 1
@@ -122,27 +123,27 @@ class GameState:
         is_full = True
         for r in range(1, self.board.num_rows + 1):
             for c in range(1, self.board.num_cols + 1):
-                stone_color = self.board._grid[r][c]
-                if stone_color is not 0:
+                stone_color = self.board._grid[r, c]
+                if stone_color != 0:
                     if self.board.is_on_grid(Point(row=r, col=c+1)) and \
-                        stone_color is self.board._grid[r][c + 1]:
+                        stone_color == self.board._grid[r, c + 1]:
                         if self.is_connect5(r, c, stone_color, Direction.right):
-                            self.winner = "Black" if stone_color is Player.black else "White"
+                            self.winner = "Black" if stone_color == Player.black else "White"
                             return True
                     if self.board.is_on_grid(Point(row=r+1, col=c)) and \
-                        stone_color is self.board._grid[r + 1][c]:
+                        stone_color == self.board._grid[r + 1, c]:
                         if self.is_connect5(r, c, stone_color, Direction.down):
-                            self.winner = "Black" if stone_color is Player.black else "White"
+                            self.winner = "Black" if stone_color == Player.black else "White"
                             return True
                     if self.board.is_on_grid(Point(row=r+1, col=c+1)) and \
-                        stone_color is self.board._grid[r + 1][c + 1]:
+                        stone_color == self.board._grid[r + 1, c + 1]:
                         if self.is_connect5(r, c, stone_color, Direction.right_down):
-                            self.winner = "Black" if stone_color is Player.black else "White"
+                            self.winner = "Black" if stone_color == Player.black else "White"
                             return True
                     if self.board.is_on_grid(Point(row=r+1, col=c-1)) and \
-                        stone_color is self.board._grid[r + 1][c - 1]:
+                        stone_color == self.board._grid[r + 1, c - 1]:
                         if self.is_connect5(r, c, stone_color, Direction.left_down):
-                            self.winner = "Black" if stone_color is Player.black else "White"
+                            self.winner = "Black" if stone_color == Player.black else "White"
                             return True
                 else:
                     is_full = False            

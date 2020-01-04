@@ -36,11 +36,11 @@ class MCTSNode(object):
 
         for move in self.state.legal_moves():
             new_state = self.state.apply_move(move)
-            prob = prob[move.point.row - 1][move.point.col - 1]
+            prob = probs[move.point.row - 1][move.point.col - 1].item()
             self.children[move] = MCTSNode(new_state, prob, self, move)
 
     def expanded(self):
-        return len(self.children) == 0
+        return len(self.children) != 0
     
     def update(self, value):
         self.N += 1
@@ -52,7 +52,7 @@ class MCTSNode(object):
         total_value = 0
         for i, child in enumerate(self.children.values()):
             child.P = (1 - eps) * child.P + eps * noise[i]
-            total_value += child.Player
+            total_value += child.P
         
         for child in self.children.values():
             child.P /= total_value
@@ -60,7 +60,7 @@ class MCTSNode(object):
     def pi(self):
         ret = np.zeros((self.state.board.num_rows, self.state.board.num_cols))
 
-        for child in self.children:
+        for child in self.children.values():
             ret[child.action.point.row - 1][child.action.point.col - 1] = child.N / self.N
 
         return ret
@@ -75,6 +75,9 @@ class MCTSNode(object):
 class AZAgent(agent.Agent):
     def __init__(self, board_size, state_dict, noise=False, alpha=0.03, eps=0.25, rounds_per_move=1600, puct_init=1.25, puct_base=19652):
         self.network = Network(board_size)
+        if USE_CUDA:
+            self.network = self.network.cuda()
+
         self.network.load_state_dict(state_dict)
 
         self.noise = noise
@@ -100,6 +103,7 @@ class AZAgent(agent.Agent):
                 in_data = in_data.cuda()
 
             policy, value = self.network(in_data)
+            value = value.item()
 
             if not node.state.is_over():
                 # Expand
@@ -120,16 +124,18 @@ class AZAgent(agent.Agent):
         in_data = preprocess.StateToTensor(game_state)
         self.train_data.append((in_data, root.pi(), game_state.next_player))
 
-        return max(root.children, key=lambda x: x.N).action
+        return max(root.children.values(), key=lambda x: x.N).action
 
     def select_node(self, node):
-        sqrt_total_visit = math.sqrt(node.N)
+        sqrt_total_visit = math.sqrt(max(node.N, 1))
 
-        def score(child):
+        def score(move):
+            child = node.get_child(move)
+
             Q = child.Q
             puct = math.log((1 + child.N + self.puct_base) / self.puct_base) + self.puct_init
             U = puct * child.P * sqrt_total_visit / (1 + child.N)
 
             return Q + U
 
-        return max(node.children, key=score).action
+        return node.get_child(max(node.children, key=score))
