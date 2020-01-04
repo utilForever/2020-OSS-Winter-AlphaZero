@@ -25,8 +25,8 @@ class MCTSNode(object):
 
         self.children = {}
 
-    def has_child(self, move):
-        return move in self.children
+    def is_root(self):
+        return self.parent is None
 
     def get_child(self, move):
         return self.children[move]
@@ -38,10 +38,24 @@ class MCTSNode(object):
             new_state = self.state.apply_move(move)
             prob = prob[move.point.row - 1][move.point.col - 1]
             self.children[move] = MCTSNode(new_state, prob, self, move)
+
+    def expanded(self):
+        return len(self.children) == 0
     
     def update(self, value):
         self.N += 1
         self.W += value
+        
+    def inject_noise(self, alpha, eps):
+        noise = np.random.dirichlet([alpha] * len(self.children))
+
+        total_value = 0
+        for i, child in enumerate(self.children.values()):
+            child.P = (1 - eps) * child.P + eps * noise[i]
+            total_value += child.Player
+        
+        for child in self.children.values():
+            child.P /= total_value
 
     def pi(self):
         ret = np.zeros((self.state.board.num_rows, self.state.board.num_cols))
@@ -59,11 +73,14 @@ class MCTSNode(object):
         return self.W / self.N
 
 class AZAgent(agent.Agent):
-    def __init__(self, state_dict, noise=False, rounds_per_move=1600, puct_init=1.25, puct_base=19652):
+    def __init__(self, state_dict, noise=False, alpha=0.03, eps=0.25, rounds_per_move=1600, puct_init=1.25, puct_base=19652):
         self.network = Network()
         self.network.load_state_dict(state_dict)
 
         self.noise = noise
+        self.alpha = alpha
+        self.eps = eps
+
         self.num_rounds = rounds_per_move
         self.puct_init = puct_init
         self.puct_base = puct_base
@@ -75,22 +92,22 @@ class AZAgent(agent.Agent):
 
         for i in range(self.num_rounds):
             node = root
-            next_move = self.select_node(node)
-            while node.has_child(next_move):
-                node = node.get_child(next_move)
-                next_move = self.select_node(node)
+            while node.expanded():
+                node = self.select_node(node)
 
-            next_state = node.state.apply_move(next_move)
-
-            in_data = torch.FloatTensor(preprocess.StateToTensor(next_state))
+            in_data = torch.FloatTensor(preprocess.StateToTensor(node.state))
             if USE_CUDA:
                 in_data = in_data.cuda()
 
             policy, value = self.network(in_data)
-            
-            # Expand
-            policy = F.softmax(policy, dim=1)
-            node.expand(policy)
+
+            if not node.state.is_over():
+                # Expand
+                policy = F.softmax(policy, dim=1)
+                node.expand(policy)
+
+                if self.noise and node.is_root():
+                    node.inject_noise(self.alpha, self.eps)
 
             # Backup
             value = -value
