@@ -133,7 +133,7 @@ class AZAgent(agent.Agent):
 
             q_value = child.q_value
             puct = math.log((1 + child.visit_count + self.puct_base) / self.puct_base) + self.puct_init if c_puct is None else c_puct
-            u_value = puct * child.P * sqrt_total_visit / (1 + child.visit_count)
+            u_value = puct * child.prob * sqrt_total_visit / (1 + child.visit_count)
 
             return q_value + u_value
 
