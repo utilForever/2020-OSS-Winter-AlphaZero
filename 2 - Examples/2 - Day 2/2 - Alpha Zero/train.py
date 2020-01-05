@@ -82,12 +82,12 @@ def main():
         p.start()
 
     while True:
-        for _ in range(queue.qsize()):
-            num_game += 1
-            print(f'selfplay game #{num_game}')
-
+        try:
             winner, result = queue.get()
             buffer.push(winner, result)
+            
+            num_game += 1
+            print(f'selfplay game #{num_game}')
 
             if len(buffer) < TRAINING_CONFIG['START_TRAINING']:
                 continue
@@ -125,6 +125,8 @@ def main():
             writer.add_scalar('train total loss', total_loss / TRAINING_CONFIG['EPOCH'], step)
             writer.add_scalar('train pi loss', total_pi / TRAINING_CONFIG['EPOCH'], step)
             writer.add_scalar('train value loss', total_v / TRAINING_CONFIG['EPOCH'], step)
+        except:
+            continue
 
 if __name__ == '__main__':
     main()
