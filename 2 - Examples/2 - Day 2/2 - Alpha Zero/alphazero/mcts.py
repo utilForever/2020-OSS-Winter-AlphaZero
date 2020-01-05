@@ -1,12 +1,11 @@
 import math
-import numpy as np
 
+import numpy as np
 import torch
 import torch.nn.functional as F
 
 from alphazero import preprocess
 from alphazero.network import Network
-
 from connect5 import agent
 from connect5.types import Player
 from connect5.utils import coords_from_point
@@ -19,9 +18,9 @@ class MCTSNode(object):
         self.parent = parent
         self.action = action
 
-        self.P = prob
-        self.N = 0
-        self.W = 0
+        self.prob = prob
+        self.visit_count = 0
+        self.win_count = 0
 
         self.children = {}
 
@@ -43,34 +42,34 @@ class MCTSNode(object):
         return len(self.children) != 0
     
     def update(self, value):
-        self.N += 1
-        self.W += value
+        self.visit_count += 1
+        self.win_count += value
         
     def inject_noise(self, alpha, eps):
         noise = np.random.dirichlet([alpha] * len(self.children))
 
         total_value = 0
         for i, child in enumerate(self.children.values()):
-            child.P = (1 - eps) * child.P + eps * noise[i]
-            total_value += child.P
+            child.prob = (1 - eps) * child.prob + eps * noise[i]
+            total_value += child.prob
         
         for child in self.children.values():
-            child.P /= total_value
+            child.prob /= total_value
 
     def pi(self):
         ret = np.zeros((self.state.board.num_rows, self.state.board.num_cols))
 
         for child in self.children.values():
-            ret[child.action.point.row - 1][child.action.point.col - 1] = child.N / self.N
+            ret[child.action.point.row - 1][child.action.point.col - 1] = child.visit_count / self.visit_count
 
         return ret.reshape(-1)
 
     @property
-    def Q(self):
-        if self.N == 0:
+    def q_value(self):
+        if self.visit_count == 0:
             return 0
 
-        return self.W / self.N
+        return self.win_count / self.visit_count
 
 class AZAgent(agent.Agent):
     def __init__(self, board_size, state_dict, noise=False, alpha=0.03, eps=0.25, rounds_per_move=1600, puct_init=1.25, puct_base=19652):
@@ -124,18 +123,18 @@ class AZAgent(agent.Agent):
         in_data = preprocess.StateToTensor(game_state)
         self.train_data.append((in_data, root.pi(), game_state.next_player))
 
-        return max(root.children.values(), key=lambda x: x.N).action
+        return max(root.children.values(), key=lambda x: x.visit_count).action
 
     def select_node(self, node, c_puct):
-        sqrt_total_visit = math.sqrt(max(node.N, 1))
+        sqrt_total_visit = math.sqrt(max(node.visit_count, 1))
 
         def score(move):
             child = node.get_child(move)
 
-            Q = child.Q
-            puct = math.log((1 + child.N + self.puct_base) / self.puct_base) + self.puct_init if c_puct is None else c_puct
-            U = puct * child.P * sqrt_total_visit / (1 + child.N)
+            q_value = child.q_value
+            puct = math.log((1 + child.visit_count + self.puct_base) / self.puct_base) + self.puct_init if c_puct is None else c_puct
+            u_value = puct * child.P * sqrt_total_visit / (1 + child.visit_count)
 
-            return Q + U
+            return q_value + u_value
 
         return node.get_child(max(node.children, key=score))

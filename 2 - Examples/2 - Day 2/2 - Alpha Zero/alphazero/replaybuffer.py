@@ -1,7 +1,8 @@
-import torch
 import numpy as np
+import torch
 
 from connect5.types import Player
+
 
 class ReplayBuffer:
     def __init__(self, capacity):

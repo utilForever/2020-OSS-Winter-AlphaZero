@@ -1,20 +1,19 @@
-import torch
-from torch import optim
-import torch.nn.functional as F
-
-from connect5 import agent, types
-from connect5 import board as connect5_board
-
-from alphazero import preprocess
-from alphazero.network import Network
-from alphazero.replaybuffer import ReplayBuffer
-from alphazero.mcts import AZAgent
-
 import multiprocessing as mp
-import numpy as np
 import os
 
+import numpy as np
+import torch
+import torch.nn.functional as F
 from tensorboardX import SummaryWriter
+from torch import optim
+
+from alphazero import preprocess
+from alphazero.mcts import AZAgent
+from alphazero.network import Network
+from alphazero.replaybuffer import ReplayBuffer
+from connect5 import agent
+from connect5 import board as connect5_board
+from connect5 import types
 
 USE_CUDA = torch.cuda.is_available()
 
