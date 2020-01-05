@@ -1,16 +1,22 @@
 from __future__ import print_function
+
+from alphazero.mcts import AZAgent
+
 from connect5 import agent
 from connect5 import board as connect5_board
 from connect5 import types
 from connect5.utils import print_board, print_move
+
+import torch
 import time
+import sys
 
 def main():
-    board_size = 9
+    board_size = 6
     game = connect5_board.GameState.new_game(board_size)
     bots = {
-        types.Player.black: agent.naive.RandomBot(),
-        types.Player.white: agent.naive.RandomBot(),
+        types.Player.black: AZAgent(board_size, torch.load(sys.argv[1]), rounds_per_move=400),
+        types.Player.white: AZAgent(board_size, torch.load(sys.argv[2]), rounds_per_move=400),
     }
 
     while not game.is_over():
