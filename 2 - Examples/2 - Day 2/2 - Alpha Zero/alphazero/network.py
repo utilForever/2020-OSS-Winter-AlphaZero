@@ -3,7 +3,7 @@ from torch import nn, optim
 
 from alphazero import preprocess
 
-FILTERS = 128
+FILTERS = 64
 
 class Flatten(nn.Module):
     def __init__(self):
@@ -17,20 +17,20 @@ class Network(nn.Module):
         nn.Module.__init__(self)
 
         self.feature_extraction = nn.Sequential(
-            nn.Conv2d(preprocess.TENSOR_DIM, FILTERS, 5, padding=2),
+            nn.Conv2d(preprocess.TENSOR_DIM, FILTERS, 3, padding=1),
+            nn.BatchNorm2d(FILTERS),
             nn.ReLU(inplace=True),
             nn.Conv2d(FILTERS, FILTERS, 3, padding=1),
+            nn.BatchNorm2d(FILTERS),
             nn.ReLU(inplace=True),
             nn.Conv2d(FILTERS, FILTERS, 3, padding=1),
+            nn.BatchNorm2d(FILTERS),
             nn.ReLU(inplace=True),
-            nn.Conv2d(FILTERS, FILTERS, 3, padding=1),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(FILTERS, FILTERS, 3, padding=1),
-            nn.ReLU(inplace=True)
         )
 
         self.policy_head = nn.Sequential(
             nn.Conv2d(FILTERS, 2, 1, padding=0),
+            nn.BatchNorm2d(2),
             nn.ReLU(inplace=True),
             Flatten(),
             nn.Linear(2 * (board_size ** 2), board_size ** 2)
@@ -38,6 +38,7 @@ class Network(nn.Module):
 
         self.value_head = nn.Sequential(
             nn.Conv2d(FILTERS, 1, 1, padding=0),
+            nn.BatchNorm2d(1),
             nn.ReLU(inplace=True),
             Flatten(),
             nn.Linear(board_size ** 2, 256),

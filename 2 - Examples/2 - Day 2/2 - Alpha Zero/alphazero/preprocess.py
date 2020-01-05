@@ -2,7 +2,7 @@ import torch
 
 from connect5.types import Player, Point
 
-PAST_MOVES = 8
+PAST_MOVES = 4
 TENSOR_DIM = PAST_MOVES * 2 + 1
 
 def StateToTensor(state):

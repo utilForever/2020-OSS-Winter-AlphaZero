@@ -8,6 +8,14 @@ class ReplayBuffer:
         self.capacity = capacity
         self.buffer = []
 
+    def clear(self):
+        self.buffer = []
+
+    def clear_half(self):
+        length = len(self.buffer) // 2
+
+        self.buffer = self.buffer[length:]
+
     def push(self, winner, data):
         if winner is 'Draw':
             winner = None

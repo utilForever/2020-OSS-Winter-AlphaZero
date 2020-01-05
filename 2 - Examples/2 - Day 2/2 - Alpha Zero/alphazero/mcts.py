@@ -63,7 +63,7 @@ class MCTSNode(object):
         for child in self.children.values():
             ret[child.action.point.row - 1][child.action.point.col - 1] = child.N / self.N
 
-        return ret
+        return ret.reshape(-1)
 
     @property
     def Q(self):
@@ -90,13 +90,13 @@ class AZAgent(agent.Agent):
 
         self.train_data = []
 
-    def select_move(self, game_state):
+    def select_move(self, game_state, c_puct=None):
         root = MCTSNode(game_state, 0, None, None)
 
         for i in range(self.num_rounds):
             node = root
             while node.expanded():
-                node = self.select_node(node)
+                node = self.select_node(node, c_puct)
 
             in_data = torch.FloatTensor(preprocess.StateToTensor(node.state))
             if USE_CUDA:
@@ -126,14 +126,14 @@ class AZAgent(agent.Agent):
 
         return max(root.children.values(), key=lambda x: x.N).action
 
-    def select_node(self, node):
+    def select_node(self, node, c_puct):
         sqrt_total_visit = math.sqrt(max(node.N, 1))
 
         def score(move):
             child = node.get_child(move)
 
             Q = child.Q
-            puct = math.log((1 + child.N + self.puct_base) / self.puct_base) + self.puct_init
+            puct = math.log((1 + child.N + self.puct_base) / self.puct_base) + self.puct_init if c_puct is None else c_puct
             U = puct * child.P * sqrt_total_visit / (1 + child.N)
 
             return Q + U

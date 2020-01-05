@@ -12,20 +12,21 @@ from alphazero.mcts import AZAgent
 
 import multiprocessing as mp
 import numpy as np
-import time
+import os
 
 from tensorboardX import SummaryWriter
 
 USE_CUDA = torch.cuda.is_available()
 
 TRAINING_CONFIG = {
-    'BOARD_SIZE': 15,
+    'BOARD_SIZE': 6,
 
-    'LEARNING_RATE': 1e-1,
+    'LEARNING_RATE': 1e-2,
     'WEIGHT_DECAY': 1e-4,
 
-    'ROUNDS_PER_MOVE': 400,
-    'PUCT_INIT': 0.5,
+    'ROUNDS_PER_MOVE': 100,
+    'PUCT': 0.85,
+    'PUCT_INIT': 1.25,
     'PUCT_BASE': 19652,
 
     'MCTS_NOISE': True,
@@ -33,10 +34,10 @@ TRAINING_CONFIG = {
     'MCTS_EPS': 0.25,
 
     'SELFPLAY_WORKERS': 6,
-    'START_TRAINING': 2000,
-    'EPOCH': 10,
-    'BATCH_SIZE': 256,
-    'CAPACITY': 5000,
+    'START_TRAINING': 1280,
+    'EPOCH': 1,
+    'BATCH_SIZE': 128,
+    'CAPACITY': 10000,
 
     'LOAD_CHECKPOINT': 0
 }
@@ -59,7 +60,7 @@ def selfplay_worker(queue):
             TRAINING_CONFIG['ROUNDS_PER_MOVE'], TRAINING_CONFIG['PUCT_INIT'], TRAINING_CONFIG['PUCT_BASE'])
 
         while not game.is_over():
-            move = agent.select_move(game)
+            move = agent.select_move(game, TRAINING_CONFIG['PUCT'])
             game = game.apply_move(move)
 
         queue.put((game.winner, agent.train_data))
@@ -71,8 +72,10 @@ def main():
 
     writer = SummaryWriter()
 
-    opt = optim.SGD(target_network.parameters(), lr=TRAINING_CONFIG['LEARNING_RATE'], weight_decay=TRAINING_CONFIG['WEIGHT_DECAY'], \
-        momentum=0.9)
+    opt = optim.SGD(target_network.parameters(), lr=TRAINING_CONFIG['LEARNING_RATE'], weight_decay=TRAINING_CONFIG['WEIGHT_DECAY'], momentum=0.9)
+
+    if not os.path.exists('models'):
+        os.mkdir('models')
 
     for _ in range(TRAINING_CONFIG['SELFPLAY_WORKERS']):
         p = mp.Process(target=selfplay_worker, args=(queue,))
@@ -116,6 +119,7 @@ def main():
                 total_v = loss_v.item()
                 total_loss = loss.item()
 
+            buffer.clear_half()
             torch.save(target_network.state_dict(), f'models/checkpoint-{step}.bin')
 
             writer.add_scalar('train total loss', total_loss / TRAINING_CONFIG['EPOCH'], step)
