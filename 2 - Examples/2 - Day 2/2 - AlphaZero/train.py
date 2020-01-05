@@ -23,7 +23,7 @@ TRAINING_CONFIG = {
     'LEARNING_RATE': 1e-2,
     'WEIGHT_DECAY': 1e-4,
 
-    'ROUNDS_PER_MOVE': 100,
+    'ROUNDS_PER_MOVE': 10,
     'PUCT': 0.85,
     'PUCT_INIT': 1.25,
     'PUCT_BASE': 19652,
@@ -67,7 +67,9 @@ def selfplay_worker(queue):
 def main():
     step = TRAINING_CONFIG['LOAD_CHECKPOINT']
     num_game = 0
-    queue = mp.Queue()
+
+    manager = mp.Manager()
+    queue = manager.Queue()
 
     writer = SummaryWriter()
 
@@ -76,9 +78,13 @@ def main():
     if not os.path.exists('models'):
         os.mkdir('models')
 
+    workers = []
     for _ in range(TRAINING_CONFIG['SELFPLAY_WORKERS']):
         p = mp.Process(target=selfplay_worker, args=(queue,))
+        p.daemon = True
         p.start()
+
+        workers.append(p)
 
     while True:
         try:
@@ -124,8 +130,16 @@ def main():
             writer.add_scalar('train total loss', total_loss / TRAINING_CONFIG['EPOCH'], step)
             writer.add_scalar('train pi loss', total_pi / TRAINING_CONFIG['EPOCH'], step)
             writer.add_scalar('train value loss', total_v / TRAINING_CONFIG['EPOCH'], step)
+        except KeyboardInterrupt:
+            print('Stopping training...')
+
+            for worker in workers:
+                worker.terminate()
+            break
+
         except:
             continue
 
 if __name__ == '__main__':
+    mp.set_start_method('spawn')
     main()
