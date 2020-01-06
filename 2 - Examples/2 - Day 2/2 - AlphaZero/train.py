@@ -1,5 +1,6 @@
 import multiprocessing as mp
 import os
+import time
 
 import numpy as np
 import torch
@@ -18,13 +19,13 @@ from connect5 import types
 USE_CUDA = torch.cuda.is_available()
 
 TRAINING_CONFIG = {
-    'BOARD_SIZE': 6,
+    'BOARD_SIZE': 10,
 
     'LEARNING_RATE': 1e-2,
     'WEIGHT_DECAY': 1e-4,
 
-    'ROUNDS_PER_MOVE': 10,
-    'PUCT': 0.85,
+    'ROUNDS_PER_MOVE': 800,
+    'PUCT': 1.25,
     'PUCT_INIT': 1.25,
     'PUCT_BASE': 19652,
 
@@ -32,7 +33,7 @@ TRAINING_CONFIG = {
     'MCTS_ALPHA': 0.03,
     'MCTS_EPS': 0.25,
 
-    'SELFPLAY_WORKERS': 6,
+    'SELFPLAY_WORKERS': 12,
     'START_TRAINING': 1280,
     'EPOCH': 1,
     'BATCH_SIZE': 128,
@@ -137,7 +138,8 @@ def main():
                 worker.terminate()
             break
 
-        except:
+        except Exception as e:
+            print('Exception', e)
             continue
 
 if __name__ == '__main__':
