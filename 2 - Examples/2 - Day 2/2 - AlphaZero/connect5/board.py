@@ -115,7 +115,7 @@ class GameState:
                 stones.append(Point(row=d_row, col=d_col))
                 d_row += 1
                 d_col -= 1
-        if len(stones) is 4:
+        if len(stones) is 5:
             return True
         return False      
 

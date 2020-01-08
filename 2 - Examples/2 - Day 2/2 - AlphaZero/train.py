@@ -1,5 +1,6 @@
 import multiprocessing as mp
 import os
+import time
 
 import numpy as np
 import torch
@@ -18,13 +19,13 @@ from connect5 import types
 USE_CUDA = torch.cuda.is_available()
 
 TRAINING_CONFIG = {
-    'BOARD_SIZE': 6,
+    'BOARD_SIZE': 10,
 
     'LEARNING_RATE': 1e-2,
     'WEIGHT_DECAY': 1e-4,
 
-    'ROUNDS_PER_MOVE': 100,
-    'PUCT': 0.85,
+    'ROUNDS_PER_MOVE': 800,
+    'PUCT': 1.25,
     'PUCT_INIT': 1.25,
     'PUCT_BASE': 19652,
 
@@ -32,7 +33,7 @@ TRAINING_CONFIG = {
     'MCTS_ALPHA': 0.03,
     'MCTS_EPS': 0.25,
 
-    'SELFPLAY_WORKERS': 6,
+    'SELFPLAY_WORKERS': 12,
     'START_TRAINING': 1280,
     'EPOCH': 1,
     'BATCH_SIZE': 128,
@@ -67,7 +68,9 @@ def selfplay_worker(queue):
 def main():
     step = TRAINING_CONFIG['LOAD_CHECKPOINT']
     num_game = 0
-    queue = mp.Queue()
+
+    manager = mp.Manager()
+    queue = manager.Queue()
 
     writer = SummaryWriter()
 
@@ -76,9 +79,13 @@ def main():
     if not os.path.exists('models'):
         os.mkdir('models')
 
+    workers = []
     for _ in range(TRAINING_CONFIG['SELFPLAY_WORKERS']):
         p = mp.Process(target=selfplay_worker, args=(queue,))
+        p.daemon = True
         p.start()
+
+        workers.append(p)
 
     while True:
         try:
@@ -124,8 +131,17 @@ def main():
             writer.add_scalar('train total loss', total_loss / TRAINING_CONFIG['EPOCH'], step)
             writer.add_scalar('train pi loss', total_pi / TRAINING_CONFIG['EPOCH'], step)
             writer.add_scalar('train value loss', total_v / TRAINING_CONFIG['EPOCH'], step)
-        except:
+        except KeyboardInterrupt:
+            print('Stopping training...')
+
+            for worker in workers:
+                worker.terminate()
+            break
+
+        except Exception as e:
+            print('Exception', e)
             continue
 
 if __name__ == '__main__':
+    mp.set_start_method('spawn')
     main()

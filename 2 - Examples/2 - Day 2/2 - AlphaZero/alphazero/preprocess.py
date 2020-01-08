@@ -1,4 +1,4 @@
-import torch
+import numpy as np 
 
 from connect5.types import Player, Point
 
@@ -8,7 +8,7 @@ TENSOR_DIM = PAST_MOVES * 2 + 1
 def StateToTensor(state):
     rows, cols = state.board.num_rows, state.board.num_cols
 
-    data = torch.zeros(TENSOR_DIM, rows, cols)
+    data = np.zeros((TENSOR_DIM, rows, cols))
     
     data[TENSOR_DIM - 1, :, :] = 1 if state.next_player == Player.black else 0
 
@@ -26,4 +26,4 @@ def StateToTensor(state):
 
         state = state.previous_state
 
-    return data.view(1, TENSOR_DIM, rows, cols)
+    return data.reshape(1, TENSOR_DIM, rows, cols)
