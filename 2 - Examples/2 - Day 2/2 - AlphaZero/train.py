@@ -18,8 +18,9 @@ from connect5 import types
 
 USE_CUDA = torch.cuda.is_available()
 
+# 학습 설정값을 저장하는 딕셔너리
 TRAINING_CONFIG = {
-    'BOARD_SIZE': 10,
+    'BOARD_SIZE': 7,
 
     'LEARNING_RATE': 1e-2,
     'WEIGHT_DECAY': 1e-4,
@@ -52,6 +53,7 @@ if USE_CUDA:
 if TRAINING_CONFIG['LOAD_CHECKPOINT'] != 0:
     target_network.load_state_dict(torch.load(f'models/checkpoint-{TRAINING_CONFIG["LOAD_CHECKPOINT"]}.bin'))
 
+# 자가 대국을 하는 작업자
 def selfplay_worker(queue):
     while True:
         game = connect5_board.GameState.new_game(TRAINING_CONFIG['BOARD_SIZE'])
@@ -65,6 +67,7 @@ def selfplay_worker(queue):
 
         queue.put((game.winner, agent.train_data))
 
+# 프로그램의 메인 함수
 def main():
     step = TRAINING_CONFIG['LOAD_CHECKPOINT']
     num_game = 0
@@ -79,6 +82,7 @@ def main():
     if not os.path.exists('models'):
         os.mkdir('models')
 
+    # 작업자를 만드는 부분
     workers = []
     for _ in range(TRAINING_CONFIG['SELFPLAY_WORKERS']):
         p = mp.Process(target=selfplay_worker, args=(queue,))
@@ -87,6 +91,7 @@ def main():
 
         workers.append(p)
 
+    # 학습을 돌리는 코드
     while True:
         try:
             winner, result = queue.get()
