@@ -6,18 +6,26 @@
 
 - Lecture
     - Day 1
-        - Introduction to Machine Learning
+        - Introduction to Reinforcement Learning
         - Exercise - Make Connect-5 Game
         - Exercise - Make Simple Connect-5 AI Bot
         - Exercise - MCTS(Monte-Carlo Tree Search)
     - Day 2
         - Exercise - Introduction to PyTorch
         - Exercise - Implement AlphaZero
-        - Connect-5 AI Competition
 - Examples
-    - TBA
+    - Day 1
+        - Make Connect-5 Game
+        - Make Simple Connect-5 AI Bot
+        - MCTS(Monte-Carlo Tree Search)
+    - Day 2
+        - Introduction to PyTorch
+        - Implement AlphaZero
 - Assignments
-    - TBA
+    - Day 1
+        - Custom Agent Competition
+    - Day 2
+        - Connect-4 AI Competition
 
 ## Acknowledgement
 
