@@ -5,6 +5,7 @@ from connect5.types import Player, Point
 PAST_MOVES = 4
 TENSOR_DIM = PAST_MOVES * 2 + 1
 
+# 오목판을 Tensor로 만들어주는 함수
 def StateToTensor(state):
     rows, cols = state.board.num_rows, state.board.num_cols
 

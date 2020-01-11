@@ -2,7 +2,7 @@ import enum
 from collections import namedtuple
 
 # 플레이어 타입(흑돌, 백돌)을 나타내는 클래스
-class Player(enum.Enum):
+class Player(enum.IntEnum):
     black = 1
     white = 2
 

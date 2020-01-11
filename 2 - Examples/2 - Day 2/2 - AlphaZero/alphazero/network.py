@@ -5,14 +5,19 @@ from alphazero import preprocess
 
 FILTERS = 64
 
+# 3차원 Tensor를 1차원으로 만드는 클래스
 class Flatten(nn.Module):
+    # 초기화 메소드
     def __init__(self):
         nn.Module.__init__(self)
 
+    # 연산하는 메소드
     def forward(self, x):
         return x.view(x.size(0), -1)
 
+# 신경망 클래스
 class Network(nn.Module):
+    # 초기화 메소드
     def __init__(self, board_size):
         nn.Module.__init__(self)
 
@@ -47,6 +52,7 @@ class Network(nn.Module):
             nn.Tanh()
         )
     
+    # 연산하는 메소드
     def forward(self, x):
         x = self.feature_extraction(x)
 
