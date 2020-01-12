@@ -2,6 +2,10 @@
 
 2020-OSS-Winter-AlphaZero is the material(lecture notes, examples and assignments) repository for making connect-5 game AI using [AlphaZero](https://deepmind.com/blog/article/alphazero-shedding-new-light-grand-games-chess-shogi-and-go) course that I have taught at Kookmin University in the summer of 2019. Note that examples and assignments in this repository uses [PyTorch](https://pytorch.org/).
 
+## Related Repositories
+
+- [2019-OSS-Summer-RL](https://github.com/utilForever/2019-OSS-Summer-RL)
+
 ## Contents
 
 - Lecture
