@@ -4,7 +4,7 @@
 
 ## Related Repositories
 
-- [2019-OSS-Summer-RL](https://github.com/utilForever/2019-OSS-Summer-RL)
+- [2019-OSS-Summer-RLBasic](https://github.com/utilForever/2019-OSS-Summer-RLBasic)
 
 ## Contents
 
